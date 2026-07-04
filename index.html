@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cavaquinho - Treino de Acordes</title>
+<style>
+  body{background:#12181f;color:#f0f0f0;font-family:Segoe UI,Arial,sans-serif;text-align:center;margin:0;padding:20px}
+  h1{color:#f7c948;margin-bottom:5px}
+  .windows{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin-top:20px}
+  .box{background:#1e2733;border-radius:12px;padding:20px;width:260px;box-shadow:0 0 12px #000}
+  .chord-name{font-size:60px;font-weight:bold;color:#4dd0e1}
+  svg{background:#2a3646;border-radius:8px}
+  .options{margin:25px auto;max-width:600px;background:#1e2733;border-radius:12px;padding:15px}
+  .options label{display:inline-block;margin:6px 12px;font-size:15px;cursor:pointer}
+  .btn{margin-top:15px;padding:10px 25px;font-size:16px;border:none;border-radius:8px;background:#4dd0e1;color:#12181f;cursor:pointer;font-weight:bold}
+  .btn:hover{background:#3ab6c9}
+  .gauge-wrap{margin:30px auto;width:220px}
+  .gauge{position:relative;width:200px;height:200px;border-radius:50%;
+    background:conic-gradient(#4dd0e1 0deg, #f7c948 180deg, #e74c3c 300deg);
+    margin:0 auto;display:flex;align-items:center;justify-content:center}
+  .gauge-inner{width:150px;height:150px;background:#12181f;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .needle{position:absolute;width:4px;height:80px;background:#fff;top:20px;left:98px;
+    transform-origin:bottom center;transition:transform .3s}
+  input[type=range]{width:200px;margin-top:10px}
+  #speedLabel{font-size:20px;font-weight:bold;color:#f7c948}
+  .legend{font-size:12px;color:#9aa5b1;margin-top:6px}
+</style>
+</head>
+<body>
+
+<h1>🎵 Cavaquinho</h1>
+<p>Treino de Transição de Acordes</p>
+
+<div class="windows">
+  <div class="box">
+    <h3>Acorde</h3>
+    <div class="chord-name" id="chordName">--</div>
+  </div>
+  <div class="box">
+    <h3>Digitação (mão esquerda)</h3>
+    <svg id="fretboard" width="200" height="240"></svg>
+    <div class="legend">1=indicador 2=médio 3=anelar 4=mínimo · O=corda solta</div>
+  </div>
+</div>
+
+<div class="options">
+  <h3>Selecione as variações para treinar</h3>
+  <label><input type="checkbox" class="qual" value="maj" checked> Maiores</label>
+  <label><input type="checkbox" class="qual" value="min" checked> Menores</label>
+  <label><input type="checkbox" class="qual" value="maj7" checked> Maiores com 7ª</label>
+  <label><input type="checkbox" class="qual" value="min7" checked> Menores com 7ª</label>
+  <br>
+  <label><input type="checkbox" id="sharp" checked> Sustenidos (#)</label>
+  <label><input type="checkbox" id="flat" checked> Bemóis (b)</label>
+  <br>
+  <button class="btn" id="startBtn">▶ Iniciar Treino</button>
+  <button class="btn" id="stopBtn" style="background:#e74c3c">■ Parar</button>
+</div>
+
+<div class="gauge-wrap">
+  <h3>Velocidade de Transição</h3>
+  <div class="gauge">
+    <div class="needle" id="needle"></div>
+    <div class="gauge-inner">
+      <span id="speedLabel">3.0s</span>
+    </div>
+  </div>
+  <input type="range" id="speedSlider" min="500" max="6000" step="100" value="3000">
+</div>
+
+<script>
+const NOTES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const NOTES_FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+
+// Cavaquinho afinado D3 G3 B3 D4 (semitons a partir de C)
+const TUNING = [2,7,11,2];
+
+const QUALITIES = {
+  maj:  {suffix:"",    tones:[0,4,7]},
+  min:  {suffix:"m",   tones:[0,3,7]},
+  maj7: {suffix:"7",   tones:[0,4,7,11]},
+  min7: {suffix:"m7",  tones:[0,3,7,10]}
+};
+
+let current = null;
+let timer = null;
+
+function buildAllowedChords(){
+  const qualsChecked = [...document.querySelectorAll('.qual:checked')].map(c=>c.value);
+  const allowSharp = document.getElementById('sharp').checked;
+  const allowFlat  = document.getElementById('flat').checked;
+
+  let roots = [];
+  for(let i=0;i<12;i++){
+    const isSharpNote = NOTES_SHARP[i].includes('#');
+    if(isSharpNote){
+      if(allowSharp) roots.push({semitone:i, name:NOTES_SHARP[i]});
+      if(allowFlat)  roots.push({semitone:i, name:NOTES_FLAT[i]});
+    } else {
+      roots.push({semitone:i, name:NOTES_SHARP[i]});
+    }
+  }
+
+  const chords = [];
+  roots.forEach(r=>{
+    qualsChecked.forEach(q=>{
+      chords.push({root:r.semitone, name:r.name + QUALITIES[q].suffix, quality:q});
+    });
+  });
+  return chords;
+}
+
+// Encontra a digitação (casa mínima) para cada corda que forme uma nota do acorde
+function findFingering(chord){
+  const tones = QUALITIES[chord.quality].tones.map(t=>(t+chord.root)%12);
+  const frets = [];
+  for(let s=0;s<4;s++){
+    let found = 0;
+    for(let f=0; f<=7; f++){
+      const pitch = (TUNING[s]+f)%12;
+      if(tones.includes(pitch)){ found=f; break; }
+    }
+    frets.push(found);
+  }
+  return frets;
+}
+
+// Numeração dos dedos da mão esquerda: casas mais baixas recebem dedos menores (1,2,3,4)
+function assignFingers(frets){
+  const pressed = frets
+    .map((f,i)=>({string:i, fret:f}))
+    .filter(o=>o.fret>0)
+    .sort((a,b)=>a.fret-b.fret || a.string-b.string);
+  const map = {};
+  pressed.forEach((p,idx)=>{ map[p.string] = Math.min(idx+1,4); });
+  return map;
+}
+
+function drawFretboard(frets){
+  const svg = document.getElementById('fretboard');
+  svg.innerHTML="";
+  const strings=4, fretsShown=5;
+  const startX=30, startY=20, stringGap=45, fretGap=40;
+
+  for(let s=0;s<strings;s++){
+    const x = startX + s*stringGap;
+    svg.innerHTML += `<line x1="${x}" y1="${startY}" x2="${x}" y2="${startY+fretsShown*fretGap}" stroke="#888" stroke-width="2"/>`;
+  }
+  for(let f=0; f<=fretsShown; f++){
+    const y = startY + f*fretGap;
+    svg.innerHTML += `<line x1="${startX}" y1="${y}" x2="${startX+3*stringGap}" y2="${y}" stroke="#555" stroke-width="${f===0?4:1}"/>`;
+  }
+
+  const fingerMap = assignFingers(frets);
+
+  frets.forEach((f,s)=>{
+    const x = startX + s*stringGap;
+    if(f===0){
+      svg.innerHTML += `<circle cx="${x}" cy="${startY-10}" r="6" fill="none" stroke="#4dd0e1" stroke-width="2"/>`;
+      svg.innerHTML += `<text x="${x}" y="${startY-18}" font-size="10" text-anchor="middle" fill="#4dd0e1">O</text>`;
+    } else {
+      const y = startY + (f-0.5)*fretGap;
+      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="10" fill="#f7c948"/>`;
+      svg.innerHTML += `<text x="${x}" y="${y+4}" font-size="12" text-anchor="middle" fill="#12181f" font-weight="bold">${fingerMap[s]}</text>`;
+    }
+  });
+}
+
+function nextChord(){
+  const pool = buildAllowedChords();
+  if(pool.length===0){ document.getElementById('chordName').textContent="Selecione ao menos uma opção"; return; }
+  current = pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById('chordName').textContent = current.name;
+  drawFretboard(findFingering(current));
+}
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  clearInterval(timer);
+  nextChord();
+  const speed = +document.getElementById('speedSlider').value;
+  timer = setInterval(nextChord, speed);
+});
+document.getElementById('stopBtn').addEventListener('click', ()=>{
+  clearInterval(timer);
+});
+
+const slider = document.getElementById('speedSlider');
+const needle = document.getElementById('needle');
+const speedLabel = document.getElementById('speedLabel');
+function updateGauge(){
+  const val = +slider.value;
+  speedLabel.textContent = (val/1000).toFixed(1)+"s";
+  const angle = (val-500)/(6000-500)*180 - 90;
+  needle.style.transform = `rotate(${angle}deg)`;
+  if(timer){ clearInterval(timer); timer = setInterval(nextChord, val); }
+}
+slider.addEventListener('input', updateGauge);
+updateGauge();
+
+drawFretboard([0,0,0,0]);
+</script>
+</body>
+</html>
