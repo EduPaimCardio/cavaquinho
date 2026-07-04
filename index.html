@@ -25,6 +25,7 @@
   input[type=range]{width:200px;margin-top:10px}
   #speedLabel{font-size:20px;font-weight:bold;color:#f7c948}
   .legend{font-size:12px;color:#9aa5b1;margin-top:6px}
+  .basefret{font-size:12px;color:#f7c948;margin-top:4px}
 </style>
 </head>
 <body>
@@ -40,6 +41,7 @@
   <div class="box">
     <h3>Digitação (mão esquerda)</h3>
     <svg id="fretboard" width="200" height="240"></svg>
+    <div class="basefret" id="baseFretLabel"></div>
     <div class="legend">1=indicador 2=médio 3=anelar 4=mínimo · O=corda solta</div>
   </div>
 </div>
@@ -73,7 +75,7 @@
 const NOTES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const NOTES_FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 
-// Cavaquinho afinado D3 G3 B3 D4 (semitons a partir de C)
+// Cavaquinho afinado D3 G3 B3 D4 (semitons a partir de C, C=0)
 const TUNING = [2,7,11,2];
 
 const QUALITIES = {
@@ -111,24 +113,26 @@ function buildAllowedChords(){
   return chords;
 }
 
-// Busca a melhor digitação:
-// - TODAS as cordas tocadas devem pertencer ao acorde (nenhuma nota "estranha")
+// Busca a melhor digitação possível:
+// - TODAS as cordas tocadas devem pertencer ao acorde (nenhuma nota estranha/dissonante)
 // - TODAS as notas essenciais do acorde (tônica, 3ª, 5ª, 7ª se houver) devem aparecer
+// maxFret=11 garante que sempre existe solução válida (cobre a oitava completa)
 function findFingering(chord){
   const tones = QUALITIES[chord.quality].tones.map(t=>(t+chord.root)%12);
-  const maxFret = 6;
+  const maxFret = 11;
   let best = null;
   let bestScore = Infinity;
 
   function search(stringIndex, frets){
     if(stringIndex === 4){
       const pitches = frets.map((f,s)=>(TUNING[s]+f)%12);
-      // toda nota tocada precisa pertencer ao acorde
       const allBelong = pitches.every(p => tones.includes(p));
-      // todas as notas essenciais do acorde precisam estar presentes
       const hasAllTones = tones.every(t => pitches.includes(t));
       if(allBelong && hasAllTones){
-        const score = frets.reduce((a,b)=>a+b,0) + Math.max(...frets)*2;
+        // penaliza casas altas e grande abertura entre dedos
+        const nonZero = frets.filter(f=>f>0);
+        const spread = nonZero.length ? Math.max(...nonZero) - Math.min(...nonZero) : 0;
+        const score = frets.reduce((a,b)=>a+b,0) + Math.max(...frets)*2 + spread*3;
         if(score < bestScore){
           bestScore = score;
           best = [...frets];
@@ -144,16 +148,9 @@ function findFingering(chord){
 
   search(0, [0,0,0,0]);
 
-  // fallback (não deveria ocorrer, mas evita travar)
+  // fallback de segurança (não deve ocorrer)
   if(!best){
-    best = [];
-    for(let s=0;s<4;s++){
-      let found=0;
-      for(let f=0; f<=10; f++){
-        if(tones.includes((TUNING[s]+f)%12)){ found=f; break; }
-      }
-      best.push(found);
-    }
+    best = [0,0,0,0];
   }
   return best;
 }
@@ -175,9 +172,15 @@ function drawFretboard(frets){
   const strings=4, fretsShown=5;
   const startX=30, startY=20, stringGap=45, fretGap=40;
 
-  // Ajusta a janela de casas exibida caso alguma casa exceda o range visível
+  const nonZero = frets.filter(f=>f>0);
+  const minF = nonZero.length ? Math.min(...nonZero) : 0;
   const maxF = Math.max(...frets, 0);
-  const baseFret = maxF > fretsShown ? maxF - fretsShown : 0;
+
+  // janela de exibição: começa 1 casa antes da menor casa pressionada (se > 1)
+  let baseFret = 0;
+  if(maxF > fretsShown){
+    baseFret = Math.max(0, minF - 1);
+  }
 
   for(let s=0;s<strings;s++){
     const x = startX + s*stringGap;
@@ -202,6 +205,9 @@ function drawFretboard(frets){
       svg.innerHTML += `<text x="${x}" y="${y+4}" font-size="12" text-anchor="middle" fill="#12181f" font-weight="bold">${fingerMap[s]}</text>`;
     }
   });
+
+  const label = document.getElementById('baseFretLabel');
+  label.textContent = baseFret > 0 ? `A partir da ${baseFret+1}ª casa` : '';
 }
 
 function nextChord(){
