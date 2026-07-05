@@ -1,247 +1,1280 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Cavaquinho - Treino de Acordes</title>
-<style>
-  body{background:#12181f;color:#f0f0f0;font-family:Segoe UI,Arial,sans-serif;text-align:center;margin:0;padding:20px}
-  h1{color:#f7c948;margin-bottom:5px}
-  .windows{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin-top:20px}
-  .box{background:#1e2733;border-radius:12px;padding:20px;width:260px;box-shadow:0 0 12px #000}
-  .chord-name{font-size:60px;font-weight:bold;color:#4dd0e1}
-  svg{background:#2a3646;border-radius:8px}
-  .options{margin:25px auto;max-width:600px;background:#1e2733;border-radius:12px;padding:15px}
-  .options label{display:inline-block;margin:6px 12px;font-size:15px;cursor:pointer}
-  .btn{margin-top:15px;padding:10px 25px;font-size:16px;border:none;border-radius:8px;background:#4dd0e1;color:#12181f;cursor:pointer;font-weight:bold}
-  .btn:hover{background:#3ab6c9}
-  .gauge-wrap{margin:30px auto;width:220px}
-  .gauge{position:relative;width:200px;height:200px;border-radius:50%;
-    background:conic-gradient(#4dd0e1 0deg, #f7c948 180deg, #e74c3c 300deg);
-    margin:0 auto;display:flex;align-items:center;justify-content:center}
-  .gauge-inner{width:150px;height:150px;background:#12181f;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;flex-direction:column}
-  .needle{position:absolute;width:4px;height:80px;background:#fff;top:20px;left:98px;
-    transform-origin:bottom center;transition:transform .3s}
-  input[type=range]{width:200px;margin-top:10px}
-  #speedLabel{font-size:20px;font-weight:bold;color:#f7c948}
-  .legend{font-size:12px;color:#9aa5b1;margin-top:6px}
-  .basefret{font-size:12px;color:#f7c948;margin-top:4px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cavaquinho - Treino de Acordes</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --surface2: #0f3460;
+            --accent: #e8a840;
+            --accent2: #d4942b;
+            --text: #e0e0e0;
+            --text2: #b0b0b0;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --string-color: #d4a574;
+            --fret-color: #c0c0c0;
+            --wood: #5c3a1e;
+            --wood-dark: #3d2210;
+            --border: #2a2a4a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+            background-image: radial-gradient(ellipse at top, #1a1a35 0%, #0d0d1a 100%);
+        }
+
+        .app-container {
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            padding: 16px 0 8px;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #f0c060);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+        .header .subtitle {
+            color: var(--text2);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .header .instrument-icon {
+            font-size: 2.5rem;
+            margin-bottom: 4px;
+        }
+
+        /* SELECTION PANEL */
+        .selection-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+        }
+        .selection-panel h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--surface2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+        .checkbox-item:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+        .checkbox-item.checked {
+            border-color: var(--accent);
+            background: #1a3350;
+        }
+        .checkbox-item input {
+            display: none;
+        }
+        .checkbox-item .check-mark {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--text2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .checkbox-item.checked .check-mark {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .checkbox-item.checked .check-mark::after {
+            content: '✓';
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .checkbox-item .label {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* MAIN DISPLAY */
+        .main-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 650px) {
+            .main-display {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .window {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 360px;
+        }
+        .window-header {
+            background: var(--surface2);
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-align: center;
+            font-weight: 600;
+        }
+        .window-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* NOTATION WINDOW */
+        .chord-notation {
+            text-align: center;
+        }
+        .chord-name {
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            color: #fff;
+            transition: all 0.15s ease;
+            line-height: 1;
+        }
+        .chord-name .sharp-flat {
+            font-size: 3rem;
+            vertical-align: super;
+        }
+        .chord-type-label {
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+        .chord-notes {
+            font-size: 0.85rem;
+            color: var(--text2);
+            margin-top: 6px;
+        }
+
+        /* DIAGRAM WINDOW */
+        .diagram-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* CONTROLS */
+        .controls-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .controls-panel h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: -8px;
+        }
+        .metronome-section {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .bpm-display {
+            background: var(--surface2);
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--accent);
+            flex-shrink: 0;
+            transition: all 0.1s;
+        }
+        .bpm-display.beating {
+            border-color: #fff;
+            box-shadow: 0 0 24px rgba(232, 168, 64, 0.6);
+            transform: scale(1.08);
+        }
+        .bpm-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+        .bpm-label {
+            font-size: 0.6rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .slider-container {
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .slider-container input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--surface2);
+            outline: none;
+            cursor: pointer;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .bpm-range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text2);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-start {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-start:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+        .btn-start.running {
+            background: var(--danger);
+        }
+        .btn-start.running:hover {
+            background: #c0392b;
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+        }
+        .btn-next {
+            background: var(--surface2);
+            color: #fff;
+            border: 2px solid var(--accent);
+        }
+        .btn-next:hover {
+            background: var(--accent);
+            color: #1a1a2e;
+            transform: translateY(-2px);
+        }
+        .btn-next:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 0.85rem;
+            color: var(--text2);
+        }
+        .stats span {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            color: var(--text2);
+            padding: 40px;
+        }
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        .empty-state p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 8px;
+            color: var(--text2);
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+    </style>
 </head>
 <body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="instrument-icon">🎸</div>
+            <h1>CAVAQUINHO</h1>
+            <div class="subtitle">Treino de Transição de Acordes</div>
+        </div>
 
-<h1>🎵 Cavaquinho</h1>
-<p>Treino de Transição de Acordes</p>
+        <!-- SELECTION PANEL -->
+        <div class="selection-panel" id="selectionPanel">
+            <h3>⚙️ Selecione as Variações para o Treino</h3>
+            <div class="checkbox-grid" id="checkboxGrid">
+                <label class="checkbox-item checked" data-var="major">
+                    <input type="checkbox" checked>
+                    <span class="check-mark"></span>
+                    <span class="label">Maiores</span>
+                </label>
+                <label class="checkbox-item checked" data-var="minor">
+                    <input type="checkbox" checked>
+                    <span class="check-mark"></span>
+                    <span class="label">Menores</span>
+                </label>
+                <label class="checkbox-item" data-var="dom7">
+                    <input type="checkbox">
+                    <span class="check-mark"></span>
+                    <span class="label">Maiores c/ Sétima</span>
+                </label>
+                <label class="checkbox-item" data-var="min7">
+                    <input type="checkbox">
+                    <span class="check-mark"></span>
+                    <span class="label">Menores c/ Sétima</span>
+                </label>
+                <label class="checkbox-item" data-var="sharp">
+                    <input type="checkbox">
+                    <span class="check-mark"></span>
+                    <span class="label">Sustenidos (♯)</span>
+                </label>
+                <label class="checkbox-item" data-var="flat">
+                    <input type="checkbox">
+                    <span class="check-mark"></span>
+                    <span class="label">Bemol (♭)</span>
+                </label>
+            </div>
+        </div>
 
-<div class="windows">
-  <div class="box">
-    <h3>Acorde</h3>
-    <div class="chord-name" id="chordName">--</div>
-  </div>
-  <div class="box">
-    <h3>Digitação (mão esquerda)</h3>
-    <svg id="fretboard" width="200" height="240"></svg>
-    <div class="basefret" id="baseFretLabel"></div>
-    <div class="legend">1=indicador 2=médio 3=anelar 4=mínimo · O=corda solta</div>
-  </div>
-</div>
+        <!-- MAIN DISPLAY -->
+        <div class="main-display">
+            <!-- NOTATION WINDOW -->
+            <div class="window" id="notationWindow">
+                <div class="window-header">📝 Notação do Acorde</div>
+                <div class="window-content" id="notationContent">
+                    <div class="empty-state">
+                        <div class="icon">🎵</div>
+                        <p>Pressione <strong>Iniciar</strong> para começar<br>ou <strong>Próximo</strong> para ver um acorde</p>
+                    </div>
+                </div>
+            </div>
 
-<div class="options">
-  <h3>Selecione as variações para treinar</h3>
-  <label><input type="checkbox" class="qual" value="maj" checked> Maiores</label>
-  <label><input type="checkbox" class="qual" value="min" checked> Menores</label>
-  <label><input type="checkbox" class="qual" value="maj7" checked> Maiores com 7ª</label>
-  <label><input type="checkbox" class="qual" value="min7" checked> Menores com 7ª</label>
-  <br>
-  <label><input type="checkbox" id="sharp" checked> Sustenidos (#)</label>
-  <label><input type="checkbox" id="flat" checked> Bemóis (b)</label>
-  <br>
-  <button class="btn" id="startBtn">▶ Iniciar Treino</button>
-  <button class="btn" id="stopBtn" style="background:#e74c3c">■ Parar</button>
-</div>
+            <!-- DIAGRAM WINDOW -->
+            <div class="window" id="diagramWindow">
+                <div class="window-header">🎸 Diagrama no Braço</div>
+                <div class="window-content" id="diagramContent">
+                    <div class="diagram-container">
+                        <canvas id="fretboardCanvas" width="320" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="gauge-wrap">
-  <h3>Velocidade de Transição</h3>
-  <div class="gauge">
-    <div class="needle" id="needle"></div>
-    <div class="gauge-inner">
-      <span id="speedLabel">3.0s</span>
+        <!-- CONTROLS -->
+        <div class="controls-panel" id="controlsPanel">
+            <h3>⏱️ Controle de Velocidade (BPM)</h3>
+            <div class="metronome-section">
+                <div class="bpm-display" id="bpmDisplay">
+                    <span class="bpm-number" id="bpmNumber">60</span>
+                    <span class="bpm-label">BPM</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="bpmSlider" min="20" max="200" value="60" step="1">
+                    <div class="bpm-range-labels">
+                        <span>20 (lento)</span>
+                        <span>200 (rápido)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-start" id="btnStart" title="Iniciar/Parar transição automática">
+                    ▶ Iniciar
+                </button>
+                <button class="btn btn-next" id="btnNext" title="Avançar para o próximo acorde">
+                    ⏭ Próximo
+                </button>
+            </div>
+            <div class="stats">
+                Acordes praticados: <span id="chordCount">0</span>
+                &nbsp;|&nbsp;
+                Acorde atual: <span id="currentChordName">—</span>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            Cavaquinho · Afinação D-G-B-D (Rio de Janeiro) · Treino de Acordes
+        </div>
     </div>
-  </div>
-  <input type="range" id="speedSlider" min="500" max="6000" step="100" value="3000">
-</div>
 
-<script>
-const NOTES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-const NOTES_FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+    <script>
+        (function() {
+            // ============ CAVAQUINHO CHORD DATABASE ============
+            // Tuning: D-G-B-D (string 4 to string 1, thickest to thinnest)
+            // Shapes: [fret_string4, fret_string3, fret_string2, fret_string1]
+            // 0 = open string
 
-// Cavaquinho afinado D3 G3 B3 D4 (semitons a partir de C, C=0)
-const TUNING = [2,7,11,2];
+            // Base shapes for natural notes (semitone offsets from C=0)
+            const semitoneNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const flatNames = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-const QUALITIES = {
-  maj:  {suffix:"",    tones:[0,4,7]},
-  min:  {suffix:"m",   tones:[0,3,7]},
-  maj7: {suffix:"7",   tones:[0,4,7,11]},
-  min7: {suffix:"m7",  tones:[0,3,7,10]}
-};
+            // Base shapes at their natural positions (for natural notes C through B)
+            const baseShapes = {
+                // [string4, string3, string2, string1]
+                major: {
+                    0: [5, 5, 4, 5],
+                    2: [0, 2, 2, 2],
+                    4: [9, 9, 8, 9],
+                    5: [3, 2, 1, 3],
+                    7: [0, 0, 0, 0],
+                    9: [2, 2, 2, 2],
+                    11: [4, 4, 3, 4]
+                },
+                minor: {
+                    0: [5, 5, 3, 5],
+                    2: [0, 2, 1, 0],
+                    4: [9, 9, 7, 9],
+                    5: [3, 2, 0, 3],
+                    7: [0, 1, 0, 1],
+                    9: [2, 2, 0, 2],
+                    11: [4, 4, 2, 4]
+                },
+                dom7: {
+                    0: [5, 5, 4, 3],
+                    2: [0, 2, 1, 2],
+                    4: [9, 9, 8, 7],
+                    5: [3, 2, 1, 0],
+                    7: [0, 0, 0, 1],
+                    9: [0, 2, 0, 2],
+                    11: [4, 4, 3, 2]
+                },
+                min7: {
+                    0: [5, 5, 3, 3],
+                    2: [0, 2, 1, 1],
+                    4: [9, 9, 7, 7],
+                    5: [3, 1, 1, 3],
+                    7: [0, 1, 0, 0],
+                    9: [2, 0, 0, 2],
+                    11: [4, 4, 2, 2]
+                }
+            };
 
-let current = null;
-let timer = null;
+            // Transpose a shape by n semitones
+            function transposeShape(shape, semitones) {
+                return shape.map(fret => {
+                    if (fret === 0) return fret;
+                    return fret + semitones;
+                });
+            }
 
-function buildAllowedChords(){
-  const qualsChecked = [...document.querySelectorAll('.qual:checked')].map(c=>c.value);
-  const allowSharp = document.getElementById('sharp').checked;
-  const allowFlat  = document.getElementById('flat').checked;
+            // Get shape for a given semitone and variation
+            function getShape(semitone, variation) {
+                const naturalSemitones = [0, 2, 4, 5, 7, 9, 11]; // C, D, E, F, G, A, B
+                // Find the nearest natural below or equal
+                let baseSemitone = null;
+                for (const ns of naturalSemitones) {
+                    if (ns <= semitone && (baseSemitone === null || ns > baseSemitone)) {
+                        baseSemitone = ns;
+                    }
+                }
+                if (baseSemitone === null) baseSemitone = 0;
 
-  let roots = [];
-  for(let i=0;i<12;i++){
-    const isSharpNote = NOTES_SHARP[i].includes('#');
-    if(isSharpNote){
-      if(allowSharp) roots.push({semitone:i, name:NOTES_SHARP[i]});
-      if(allowFlat)  roots.push({semitone:i, name:NOTES_FLAT[i]});
-    } else {
-      roots.push({semitone:i, name:NOTES_SHARP[i]});
-    }
-  }
+                const baseShape = baseShapes[variation][baseSemitone];
+                if (!baseShape) return null;
 
-  const chords = [];
-  roots.forEach(r=>{
-    qualsChecked.forEach(q=>{
-      chords.push({root:r.semitone, name:r.name + QUALITIES[q].suffix, quality:q});
-    });
-  });
-  return chords;
-}
+                const offset = semitone - baseSemitone;
+                return transposeShape(baseShape, offset);
+            }
 
-// Busca a melhor digitação possível:
-// - TODAS as cordas tocadas devem pertencer ao acorde (nenhuma nota estranha/dissonante)
-// - TODAS as notas essenciais do acorde (tônica, 3ª, 5ª, 7ª se houver) devem aparecer
-// maxFret=11 garante que sempre existe solução válida (cobre a oitava completa)
-function findFingering(chord){
-  const tones = QUALITIES[chord.quality].tones.map(t=>(t+chord.root)%12);
-  const maxFret = 11;
-  let best = null;
-  let bestScore = Infinity;
+            // Build chord name
+            function chordName(semitone, variation, useFlat) {
+                let name;
+                if (useFlat && [1, 3, 6, 8, 10].includes(semitone)) {
+                    name = flatNames[semitone];
+                } else {
+                    name = semitoneNames[semitone];
+                }
+                return name;
+            }
 
-  function search(stringIndex, frets){
-    if(stringIndex === 4){
-      const pitches = frets.map((f,s)=>(TUNING[s]+f)%12);
-      const allBelong = pitches.every(p => tones.includes(p));
-      const hasAllTones = tones.every(t => pitches.includes(t));
-      if(allBelong && hasAllTones){
-        // penaliza casas altas e grande abertura entre dedos
-        const nonZero = frets.filter(f=>f>0);
-        const spread = nonZero.length ? Math.max(...nonZero) - Math.min(...nonZero) : 0;
-        const score = frets.reduce((a,b)=>a+b,0) + Math.max(...frets)*2 + spread*3;
-        if(score < bestScore){
-          bestScore = score;
-          best = [...frets];
-        }
-      }
-      return;
-    }
-    for(let f=0; f<=maxFret; f++){
-      frets[stringIndex] = f;
-      search(stringIndex+1, frets);
-    }
-  }
+            function variationSuffix(variation) {
+                switch (variation) {
+                    case 'major':
+                        return '';
+                    case 'minor':
+                        return 'm';
+                    case 'dom7':
+                        return '7';
+                    case 'min7':
+                        return 'm7';
+                    default:
+                        return '';
+                }
+            }
 
-  search(0, [0,0,0,0]);
+            function variationLabel(variation) {
+                switch (variation) {
+                    case 'major':
+                        return 'Maior';
+                    case 'minor':
+                        return 'Menor';
+                    case 'dom7':
+                        return 'Maior com Sétima';
+                    case 'min7':
+                        return 'Menor com Sétima';
+                    default:
+                        return '';
+                }
+            }
 
-  // fallback de segurança (não deve ocorrer)
-  if(!best){
-    best = [0,0,0,0];
-  }
-  return best;
-}
+            // ============ APPLICATION STATE ============
+            const state = {
+                selectedVariations: {
+                    major: true,
+                    minor: true,
+                    dom7: false,
+                    min7: false,
+                    sharp: false,
+                    flat: false
+                },
+                bpm: 60,
+                isRunning: false,
+                chordCount: 0,
+                currentChord: null,
+                timerId: null,
+                beatPhase: false
+            };
 
-// Numeração dos dedos da mão esquerda: casas mais baixas recebem dedos menores (1,2,3,4)
-function assignFingers(frets){
-  const pressed = frets
-    .map((f,i)=>({string:i, fret:f}))
-    .filter(o=>o.fret>0)
-    .sort((a,b)=>a.fret-b.fret || a.string-b.string);
-  const map = {};
-  pressed.forEach((p,idx)=>{ map[p.string] = Math.min(idx+1,4); });
-  return map;
-}
+            // ============ BUILD CHORD POOL ============
+            function buildChordPool() {
+                const pool = [];
+                const sel = state.selectedVariations;
 
-function drawFretboard(frets){
-  const svg = document.getElementById('fretboard');
-  svg.innerHTML="";
-  const strings=4, fretsShown=5;
-  const startX=30, startY=20, stringGap=45, fretGap=40;
+                // Determine which semitones to include
+                const semitones = new Set();
+                // Natural notes always included
+                [0, 2, 4, 5, 7, 9, 11].forEach(s => semitones.add(s));
+                // Sharps
+                if (sel.sharp) {
+                    [1, 3, 6, 8, 10].forEach(s => semitones.add(s));
+                }
+                // Flats (enharmonic with sharps, but different name)
+                if (sel.flat) {
+                    [1, 3, 6, 8, 10].forEach(s => semitones.add(s));
+                }
 
-  const nonZero = frets.filter(f=>f>0);
-  const minF = nonZero.length ? Math.min(...nonZero) : 0;
-  const maxF = Math.max(...frets, 0);
+                // Build combinations
+                const variationKeys = ['major', 'minor', 'dom7', 'min7'];
+                for (const semitone of semitones) {
+                    const isNatural = [0, 2, 4, 5, 7, 9, 11].includes(semitone);
+                    const isSharp = [1, 3, 6, 8, 10].includes(semitone);
 
-  // janela de exibição: começa 1 casa antes da menor casa pressionada (se > 1)
-  let baseFret = 0;
-  if(maxF > fretsShown){
-    baseFret = Math.max(0, minF - 1);
-  }
+                    for (const variation of variationKeys) {
+                        if (!sel[variation]) continue;
 
-  for(let s=0;s<strings;s++){
-    const x = startX + s*stringGap;
-    svg.innerHTML += `<line x1="${x}" y1="${startY}" x2="${x}" y2="${startY+fretsShown*fretGap}" stroke="#888" stroke-width="2"/>`;
-  }
-  for(let f=0; f<=fretsShown; f++){
-    const y = startY + f*fretGap;
-    svg.innerHTML += `<line x1="${startX}" y1="${y}" x2="${startX+3*stringGap}" y2="${y}" stroke="#555" stroke-width="${(f===0 && baseFret===0)?4:1}"/>`;
-  }
+                        // For natural notes, use natural name
+                        if (isNatural) {
+                            pool.push({
+                                semitone,
+                                variation,
+                                useFlat: false,
+                                name: chordName(semitone, variation, false),
+                                fullName: chordName(semitone, variation, false) + variationSuffix(
+                                    variation),
+                                variationLabel: variationLabel(variation),
+                                shape: getShape(semitone, variation)
+                            });
+                        }
 
-  const fingerMap = assignFingers(frets);
+                        // For sharp/flat notes
+                        if (isSharp) {
+                            if (sel.sharp) {
+                                pool.push({
+                                    semitone,
+                                    variation,
+                                    useFlat: false,
+                                    name: chordName(semitone, variation, false),
+                                    fullName: chordName(semitone, variation, false) + variationSuffix(
+                                        variation),
+                                    variationLabel: variationLabel(variation),
+                                    shape: getShape(semitone, variation)
+                                });
+                            }
+                            if (sel.flat) {
+                                pool.push({
+                                    semitone,
+                                    variation,
+                                    useFlat: true,
+                                    name: chordName(semitone, variation, true),
+                                    fullName: chordName(semitone, variation, true) + variationSuffix(
+                                        variation),
+                                    variationLabel: variationLabel(variation),
+                                    shape: getShape(semitone, variation)
+                                });
+                            }
+                        }
+                    }
+                }
 
-  frets.forEach((f,s)=>{
-    const x = startX + s*stringGap;
-    if(f===0){
-      svg.innerHTML += `<circle cx="${x}" cy="${startY-10}" r="6" fill="none" stroke="#4dd0e1" stroke-width="2"/>`;
-      svg.innerHTML += `<text x="${x}" y="${startY-18}" font-size="10" text-anchor="middle" fill="#4dd0e1">O</text>`;
-    } else {
-      const relFret = f - baseFret;
-      const y = startY + (relFret-0.5)*fretGap;
-      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="10" fill="#f7c948"/>`;
-      svg.innerHTML += `<text x="${x}" y="${y+4}" font-size="12" text-anchor="middle" fill="#12181f" font-weight="bold">${fingerMap[s]}</text>`;
-    }
-  });
+                // Remove duplicates (same fullName)
+                const seen = new Set();
+                const uniquePool = [];
+                for (const chord of pool) {
+                    if (!seen.has(chord.fullName)) {
+                        seen.add(chord.fullName);
+                        uniquePool.push(chord);
+                    }
+                }
+                return uniquePool;
+            }
 
-  const label = document.getElementById('baseFretLabel');
-  label.textContent = baseFret > 0 ? `A partir da ${baseFret+1}ª casa` : '';
-}
+            // ============ RANDOM CHORD SELECTION ============
+            function getRandomChord() {
+                const pool = buildChordPool();
+                if (pool.length === 0) return null;
+                // Avoid repeating the same chord consecutively if pool has more than 1
+                if (pool.length > 1 && state.currentChord) {
+                    let chord;
+                    let attempts = 0;
+                    do {
+                        chord = pool[Math.floor(Math.random() * pool.length)];
+                        attempts++;
+                    } while (chord.fullName === state.currentChord.fullName && attempts < 20);
+                    return chord;
+                }
+                return pool[Math.floor(Math.random() * pool.length)];
+            }
 
-function nextChord(){
-  const pool = buildAllowedChords();
-  if(pool.length===0){ document.getElementById('chordName').textContent="Selecione ao menos uma opção"; return; }
-  current = pool[Math.floor(Math.random()*pool.length)];
-  document.getElementById('chordName').textContent = current.name;
-  drawFretboard(findFingering(current));
-}
+            // ============ DOM ELEMENTS ============
+            const $notationContent = document.getElementById('notationContent');
+            const $diagramContent = document.getElementById('diagramContent');
+            const $canvas = document.getElementById('fretboardCanvas');
+            const $btnStart = document.getElementById('btnStart');
+            const $btnNext = document.getElementById('btnNext');
+            const $bpmSlider = document.getElementById('bpmSlider');
+            const $bpmNumber = document.getElementById('bpmNumber');
+            const $bpmDisplay = document.getElementById('bpmDisplay');
+            const $chordCount = document.getElementById('chordCount');
+            const $currentChordName = document.getElementById('currentChordName');
 
-document.getElementById('startBtn').addEventListener('click', ()=>{
-  clearInterval(timer);
-  nextChord();
-  const speed = +document.getElementById('speedSlider').value;
-  timer = setInterval(nextChord, speed);
-});
-document.getElementById('stopBtn').addEventListener('click', ()=>{
-  clearInterval(timer);
-});
+            const ctx = $canvas.getContext('2d');
 
-const slider = document.getElementById('speedSlider');
-const needle = document.getElementById('needle');
-const speedLabel = document.getElementById('speedLabel');
-function updateGauge(){
-  const val = +slider.value;
-  speedLabel.textContent = (val/1000).toFixed(1)+"s";
-  const angle = (val-500)/(6000-500)*180 - 90;
-  needle.style.transform = `rotate(${angle}deg)`;
-  if(timer){ clearInterval(timer); timer = setInterval(nextChord, val); }
-}
-slider.addEventListener('input', updateGauge);
-updateGauge();
+            // ============ CANVAS DRAWING ============
+            function drawFretboard(chord) {
+                const canvas = $canvas;
+                const w = canvas.width;
+                const h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
 
-drawFretboard([0,0,0,0]);
-</script>
+                if (!chord || !chord.shape) {
+                    // Draw empty state
+                    ctx.fillStyle = '#555';
+                    ctx.font = '16px "Segoe UI", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Selecione variações e inicie o treino', w / 2, h / 2);
+                    return;
+                }
+
+                const shape = chord.shape;
+                const frets = shape;
+                const minFret = Math.min(...frets.filter(f => f > 0));
+                const maxFret = Math.max(...frets);
+                const hasOpen = frets.some(f => f === 0);
+
+                // Determine display range (show ~5 frets)
+                let startFret, endFret;
+                if (maxFret <= 5 && hasOpen) {
+                    startFret = 1;
+                    endFret = 5;
+                } else if (maxFret <= 5) {
+                    startFret = 1;
+                    endFret = 5;
+                } else {
+                    startFret = Math.max(1, minFret - 1);
+                    endFret = startFret + 4;
+                    if (endFret < maxFret) {
+                        endFret = maxFret;
+                        startFret = endFret - 4;
+                    }
+                }
+
+                const numFretsShown = endFret - startFret + 1;
+                const topMargin = 70;
+                const bottomMargin = 50;
+                const leftMargin = 50;
+                const rightMargin = 40;
+                const fretHeight = (h - topMargin - bottomMargin) / numFretsShown;
+                const stringSpacing = (w - leftMargin - rightMargin) / 3;
+
+                // String positions
+                const stringX = [0, 1, 2, 3].map(i => leftMargin + i * stringSpacing);
+
+                // Draw wood background
+                ctx.fillStyle = '#4a2c0a';
+                ctx.fillRect(leftMargin - 30, topMargin - 10, w - leftMargin - rightMargin + 60, h - topMargin -
+                    bottomMargin + 20);
+
+                // Draw frets
+                for (let i = 0; i <= numFretsShown; i++) {
+                    const y = topMargin + i * fretHeight;
+                    ctx.strokeStyle = '#c0c0c0';
+                    ctx.lineWidth = i === 0 ? 4 : 2;
+                    ctx.beginPath();
+                    ctx.moveTo(leftMargin - 16, y);
+                    ctx.lineTo(w - rightMargin + 6, y);
+                    ctx.stroke();
+                }
+
+                // Draw strings
+                const stringThickness = [2.5, 2.2, 1.8, 1.5]; // thickest to thinnest
+                for (let s = 0; s < 4; s++) {
+                    ctx.strokeStyle = '#d4a574';
+                    ctx.lineWidth = stringThickness[s];
+                    ctx.beginPath();
+                    ctx.moveTo(stringX[s], topMargin);
+                    ctx.lineTo(stringX[s], topMargin + numFretsShown * fretHeight);
+                    ctx.stroke();
+                }
+
+                // Draw fret numbers
+                if (startFret > 1) {
+                    ctx.fillStyle = '#e8a840';
+                    ctx.font = 'bold 14px "Segoe UI", sans-serif';
+                    ctx.textAlign = 'right';
+                    for (let i = 0; i < numFretsShown; i++) {
+                        const y = topMargin + i * fretHeight + fretHeight / 2 + 5;
+                        ctx.fillText(startFret + i, leftMargin - 24, y);
+                    }
+                }
+
+                // Draw nut indicator if starting at fret 1
+                if (startFret === 1 && hasOpen) {
+                    // Thick nut is already drawn as the first fret line
+                }
+
+                // Draw string names at bottom
+                const stringLabels = ['D', 'G', 'B', 'D'];
+                ctx.fillStyle = '#e8a840';
+                ctx.font = 'bold 11px "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                for (let s = 0; s < 4; s++) {
+                    ctx.fillText(stringLabels[s], stringX[s], topMargin + numFretsShown * fretHeight + 22);
+                }
+                // String number labels
+                ctx.fillStyle = '#999';
+                ctx.font = '9px "Segoe UI", sans-serif';
+                for (let s = 0; s < 4; s++) {
+                    ctx.fillText((4 - s).toString(), stringX[s], topMargin + numFretsShown * fretHeight + 36);
+                }
+
+                // Draw open string indicators
+                for (let s = 0; s < 4; s++) {
+                    if (frets[s] === 0) {
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath();
+                        ctx.arc(stringX[s], topMargin - 18, 9, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#1a1a2e';
+                        ctx.font = 'bold 10px "Segoe UI", sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('O', stringX[s], topMargin - 14);
+                    }
+                }
+
+                // Draw finger positions
+                for (let s = 0; s < 4; s++) {
+                    const fret = frets[s];
+                    if (fret > 0) {
+                        const fretIndex = fret - startFret;
+                        if (fretIndex >= 0 && fretIndex < numFretsShown) {
+                            const x = stringX[s];
+                            const y = topMargin + fretIndex * fretHeight + fretHeight / 2;
+                            const radius = Math.min(fretHeight / 2.5, stringSpacing / 2.5);
+
+                            // Glow
+                            ctx.fillStyle = 'rgba(232,168,64,0.3)';
+                            ctx.beginPath();
+                            ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Finger circle
+                            ctx.fillStyle = '#1a1a2e';
+                            ctx.beginPath();
+                            ctx.arc(x, y, radius, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = '#e8a840';
+                            ctx.lineWidth = 2.5;
+                            ctx.stroke();
+
+                            // Finger number (simple assignment)
+                            const fingerMap = assignFingers(shape, fret);
+                            const fingerNum = fingerMap[s];
+                            if (fingerNum) {
+                                ctx.fillStyle = '#fff';
+                                ctx.font = `bold ${Math.floor(radius * 1.3)}px "Segoe UI", sans-serif`;
+                                ctx.textAlign = 'center';
+                                ctx.fillText(fingerNum.toString(), x, y + radius * 0.35);
+                            }
+                        }
+                    }
+                }
+
+                // Chord name on diagram
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 20px "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(chord.fullName, w / 2, topMargin - 32);
+            }
+
+            function assignFingers(shape, fret) {
+                // Simple finger assignment based on fret positions
+                const fingers = [0, 0, 0, 0]; // string 4,3,2,1
+                const positions = shape.map((f, i) => ({ string: i, fret: f }));
+
+                // Group by fret
+                const byFret = {};
+                positions.forEach(p => {
+                    if (p.fret > 0) {
+                        if (!byFret[p.fret]) byFret[p.fret] = [];
+                        byFret[p.fret].push(p.string);
+                    }
+                });
+
+                // Assign fingers: bar (index=1) for multiple strings on same fret
+                const fretEntries = Object.entries(byFret).sort((a, b) => Number(a[0]) - Number(b[0]));
+
+                if (fretEntries.length <= 4) {
+                    // Assign index(1) to lowest fret with multiple strings or first fret
+                    let fingerIdx = 1;
+                    for (const [fretStr, strings] of fretEntries) {
+                        const f = Number(fretStr);
+                        if (strings.length >= 3 && fingerIdx === 1) {
+                            // Bar with index
+                            strings.forEach(s => { fingers[s] = 1; });
+                            fingerIdx = 2;
+                        } else {
+                            for (const s of strings) {
+                                if (fingers[s] === 0) {
+                                    fingers[s] = Math.min(fingerIdx, 4);
+                                    fingerIdx++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return fingers;
+            }
+
+            // ============ RENDER ============
+            function renderChord(chord) {
+                // Notation window
+                if (chord) {
+                    const [root, suffix] = splitChordName(chord.fullName);
+                    $notationContent.innerHTML = `
+                        <div class="chord-notation">
+                            <div class="chord-name">${root}<span class="sharp-flat">${suffix}</span></div>
+                            <div class="chord-type-label">${chord.variationLabel}</div>
+                            <div class="chord-notes">${getChordNotes(chord)}</div>
+                        </div>
+                    `;
+                } else {
+                    $notationContent.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">⚠️</div>
+                            <p>Selecione ao menos uma<br>variação de acorde acima</p>
+                        </div>
+                    `;
+                }
+
+                // Diagram window
+                drawFretboard(chord);
+
+                // Update stats
+                $currentChordName.textContent = chord ? chord.fullName : '—';
+            }
+
+            function splitChordName(fullName) {
+                // Split "Cm7" into "C" and "m7"
+                const match = fullName.match(/^([A-G][#b]?)(.*)$/);
+                if (match) {
+                    return [match[1], match[2]];
+                }
+                return [fullName, ''];
+            }
+
+            function getChordNotes(chord) {
+                // Return the notes that make up the chord
+                const intervals = {
+                    major: [0, 4, 7],
+                    minor: [0, 3, 7],
+                    dom7: [0, 4, 7, 10],
+                    min7: [0, 3, 7, 10]
+                };
+                const interval = intervals[chord.variation] || [0, 4, 7];
+                const notes = interval.map(i => {
+                    const noteIdx = (chord.semitone + i) % 12;
+                    return semitoneNames[noteIdx];
+                });
+                return 'Notas: ' + notes.join(' – ');
+            }
+
+            function showNewChord() {
+                const chord = getRandomChord();
+                state.currentChord = chord;
+                if (chord) {
+                    state.chordCount++;
+                }
+                renderChord(chord);
+                $chordCount.textContent = state.chordCount;
+                // Flash BPM display
+                flashBeat();
+            }
+
+            function flashBeat() {
+                $bpmDisplay.classList.add('beating');
+                setTimeout(() => {
+                    $bpmDisplay.classList.remove('beating');
+                }, 120);
+            }
+
+            // ============ METRONOME ============
+            function getIntervalMs() {
+                return (60 / state.bpm) * 1000;
+            }
+
+            function startMetronome() {
+                if (state.isRunning) return;
+                const pool = buildChordPool();
+                if (pool.length === 0) {
+                    alert('Selecione ao menos uma variação de acorde para iniciar o treino.');
+                    return;
+                }
+                state.isRunning = true;
+                $btnStart.textContent = '⏹ Parar';
+                $btnStart.classList.add('running');
+                $btnNext.disabled = true;
+                // Show first chord immediately
+                showNewChord();
+                scheduleNext();
+            }
+
+            function stopMetronome() {
+                state.isRunning = false;
+                $btnStart.textContent = '▶ Iniciar';
+                $btnStart.classList.remove('running');
+                $btnNext.disabled = false;
+                if (state.timerId) {
+                    clearTimeout(state.timerId);
+                    state.timerId = null;
+                }
+            }
+
+            function scheduleNext() {
+                if (!state.isRunning) return;
+                state.timerId = setTimeout(() => {
+                    showNewChord();
+                    scheduleNext();
+                }, getIntervalMs());
+            }
+
+            function toggleMetronome() {
+                if (state.isRunning) {
+                    stopMetronome();
+                } else {
+                    startMetronome();
+                }
+            }
+
+            // ============ EVENT HANDLERS ============
+            $btnStart.addEventListener('click', toggleMetronome);
+
+            $btnNext.addEventListener('click', () => {
+                const pool = buildChordPool();
+                if (pool.length === 0) {
+                    alert('Selecione ao menos uma variação de acorde.');
+                    return;
+                }
+                showNewChord();
+            });
+
+            $bpmSlider.addEventListener('input', () => {
+                state.bpm = parseInt($bpmSlider.value);
+                $bpmNumber.textContent = state.bpm;
+                // If running, restart the timer with new interval
+                if (state.isRunning) {
+                    if (state.timerId) clearTimeout(state.timerId);
+                    scheduleNext();
+                }
+            });
+
+            // Checkbox handling
+            const checkboxItems = document.querySelectorAll('.checkbox-item');
+            checkboxItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const varName = this.dataset.var;
+                    // Toggle
+                    state.selectedVariations[varName] = !state.selectedVariations[varName];
+                    // Update visual
+                    if (state.selectedVariations[varName]) {
+                        this.classList.add('checked');
+                        this.querySelector('input').checked = true;
+                    } else {
+                        this.classList.remove('checked');
+                        this.querySelector('input').checked = false;
+                    }
+                    // If running, update pool — but don't interrupt current chord
+                    // If no chords available, stop
+                    const pool = buildChordPool();
+                    if (pool.length === 0 && state.isRunning) {
+                        stopMetronome();
+                        renderChord(null);
+                    }
+                    // Save preferences
+                    savePreferences();
+                });
+            });
+
+            // ============ PERSISTENCE ============
+            function savePreferences() {
+                try {
+                    localStorage.setItem('cavaquinho_prefs', JSON.stringify({
+                        variations: state.selectedVariations,
+                        bpm: state.bpm
+                    }));
+                } catch (e) {
+                    // localStorage not available
+                }
+            }
+
+            function loadPreferences() {
+                try {
+                    const saved = localStorage.getItem('cavaquinho_prefs');
+                    if (saved) {
+                        const prefs = JSON.parse(saved);
+                        if (prefs.variations) {
+                            state.selectedVariations = { ...state.selectedVariations, ...prefs.variations };
+                            // Update checkboxes
+                            checkboxItems.forEach(item => {
+                                const varName = item.dataset.var;
+                                if (state.selectedVariations[varName]) {
+                                    item.classList.add('checked');
+                                    item.querySelector('input').checked = true;
+                                } else {
+                                    item.classList.remove('checked');
+                                    item.querySelector('input').checked = false;
+                                }
+                            });
+                        }
+                        if (prefs.bpm) {
+                            state.bpm = prefs.bpm;
+                            $bpmSlider.value = state.bpm;
+                            $bpmNumber.textContent = state.bpm;
+                        }
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            // ============ KEYBOARD SHORTCUTS ============
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'range') return;
+                switch (e.key.toLowerCase()) {
+                    case ' ':
+                        e.preventDefault();
+                        toggleMetronome();
+                        break;
+                    case 'arrowright':
+                        e.preventDefault();
+                        if (!state.isRunning) {
+                            const pool = buildChordPool();
+                            if (pool.length > 0) showNewChord();
+                        }
+                        break;
+                    case 'arrowup':
+                        e.preventDefault();
+                        state.bpm = Math.min(200, state.bpm + 5);
+                        $bpmSlider.value = state.bpm;
+                        $bpmNumber.textContent = state.bpm;
+                        if (state.isRunning) {
+                            if (state.timerId) clearTimeout(state.timerId);
+                            scheduleNext();
+                        }
+                        savePreferences();
+                        break;
+                    case 'arrowdown':
+                        e.preventDefault();
+                        state.bpm = Math.max(20, state.bpm - 5);
+                        $bpmSlider.value = state.bpm;
+                        $bpmNumber.textContent = state.bpm;
+                        if (state.isRunning) {
+                            if (state.timerId) clearTimeout(state.timerId);
+                            scheduleNext();
+                        }
+                        savePreferences();
+                        break;
+                }
+            });
+
+            // ============ INITIALIZATION ============
+            function init() {
+                loadPreferences();
+                // Draw initial empty fretboard
+                drawFretboard(null);
+                // Initial pool check
+                const pool = buildChordPool();
+                if (pool.length === 0) {
+                    renderChord(null);
+                }
+            }
+
+            // Handle canvas resize for retina displays
+            function setupCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = $canvas.getBoundingClientRect();
+                // We set fixed size in HTML attributes, but adjust for DPR
+                const displayWidth = 320;
+                const displayHeight = 400;
+                $canvas.width = displayWidth * dpr;
+                $canvas.height = displayHeight * dpr;
+                $canvas.style.width = displayWidth + 'px';
+                $canvas.style.height = displayHeight + 'px';
+                ctx.scale(dpr, dpr);
+                // Store display dimensions for drawing reference
+                $canvas._displayWidth = displayWidth;
+                $canvas._displayHeight = displayHeight;
+            }
+
+            // Override canvas width/height getters for drawing
+            const origGetWidth = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'width');
+            const origGetHeight = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'height');
+
+            // Actually, let's just adjust the draw function to use the display dimensions
+            // and reset the transform each time
+            const originalDrawFretboard = drawFretboard;
+            drawFretboard = function(chord) {
+                const dpr = window.devicePixelRatio || 1;
+                const displayWidth = 320;
+                const displayHeight = 400;
+                $canvas.width = displayWidth * dpr;
+                $canvas.height = displayHeight * dpr;
+                $canvas.style.width = displayWidth + 'px';
+                $canvas.style.height = displayHeight + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                // Now use displayWidth/displayHeight for all coordinates
+                // But the original function uses canvas.width/height...
+                // Let me fix this by overriding those
+                Object.defineProperty($canvas, 'width', { value: displayWidth, configurable: true });
+                Object.defineProperty($canvas, 'height', { value: displayHeight, configurable: true });
+                originalDrawFretboard(chord);
+            };
+
+            init();
+            setupCanvas();
+
+            console.log('🎸 Cavaquinho - Treino de Acordes pronto!');
+            console.log('   Afinação: D-G-B-D (Padrão Rio de Janeiro)');
+            console.log('   ⌨️ Atalhos: ESPAÇO = Iniciar/Parar | → = Próximo | ↑↓ = Ajustar BPM');
+        })();
+    </script>
 </body>
 </html>
